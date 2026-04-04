@@ -371,4 +371,39 @@ We may update this policy. Continued use means acceptance.
     <string name="transactions">Transactions</string>
     <string name="no_transactions">No transactions yet</string>
 
+
+    <string name="settings">Settings</string>
+    <string name="theme">Theme</string>
+    <string name="language">Language</string>
+    <string name="english">English</string>
+    <string name="hindi">Hindi</string>
+    <string name="account">Account</string>
+    <string name="delete_account">Delete Account</string>
+    <string name="delete_account_confirmation">Are you sure you want to delete your account session on this device?</string>
+    <string name="investments_title">Investments</string>
+    <string name="invalid_investment_url">Invalid investment URL</string>
+    <string name="no_app_to_open_url">No app available to open this URL</string>
+    <string name="unable_to_open_link">Unable to open link</string>
+    <string name="investment_type">Type: %1$s</string>
+    <string name="investment_risk">Risk: %1$s</string>
+    <string name="investment_returns">Returns: %1$s</string>
+    <string name="tap_to_invest">Tap to Invest</string>
+    <string name="find_best_investment">Find Best Investment for You</string>
+    <string name="question_risk_level">What is your risk level?</string>
+    <string name="question_investment_duration">Investment duration?</string>
+    <string name="question_income_range">Monthly income range?</string>
+    <string name="risk_low">Low</string>
+    <string name="risk_medium">Medium</string>
+    <string name="risk_high">High</string>
+    <string name="duration_short">Short</string>
+    <string name="duration_long">Long</string>
+    <string name="income_below_25k">Below 25K</string>
+    <string name="income_25k_50k">25K - 50K</string>
+    <string name="income_above_50k">Above 50K</string>
+    <string name="mutual_fund">Mutual Fund</string>
+    <string name="digital_gold">Digital Gold</string>
+    <string name="stock_market">Stock Market</string>
+    <string name="get_recommendation">Get Recommendation</string>
+    <string name="recommended_result">Recommended: %1$s</string>
+
 </resources>

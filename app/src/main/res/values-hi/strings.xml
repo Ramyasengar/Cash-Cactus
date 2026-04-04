@@ -370,4 +370,39 @@
     <string name="transactions">लेन-देन</string>
     <string name="no_transactions">अभी कोई लेन-देन नहीं है</string>
 
+
+    <string name="settings">सेटिंग्स</string>
+    <string name="theme">थीम</string>
+    <string name="language">भाषा</string>
+    <string name="english">अंग्रेज़ी</string>
+    <string name="hindi">हिंदी</string>
+    <string name="account">खाता</string>
+    <string name="delete_account">खाता हटाएँ</string>
+    <string name="delete_account_confirmation">क्या आप इस डिवाइस पर अपना खाता सत्र हटाना चाहते हैं?</string>
+    <string name="investments_title">निवेश</string>
+    <string name="invalid_investment_url">अमान्य निवेश URL</string>
+    <string name="no_app_to_open_url">इस URL को खोलने के लिए कोई ऐप उपलब्ध नहीं है</string>
+    <string name="unable_to_open_link">लिंक नहीं खुल सका</string>
+    <string name="investment_type">प्रकार: %1$s</string>
+    <string name="investment_risk">जोखिम: %1$s</string>
+    <string name="investment_returns">रिटर्न: %1$s</string>
+    <string name="tap_to_invest">निवेश करने के लिए टैप करें</string>
+    <string name="find_best_investment">अपने लिए सबसे अच्छा निवेश खोजें</string>
+    <string name="question_risk_level">आपका जोखिम स्तर क्या है?</string>
+    <string name="question_investment_duration">निवेश अवधि?</string>
+    <string name="question_income_range">मासिक आय सीमा?</string>
+    <string name="risk_low">कम</string>
+    <string name="risk_medium">मध्यम</string>
+    <string name="risk_high">उच्च</string>
+    <string name="duration_short">छोटी</string>
+    <string name="duration_long">लंबी</string>
+    <string name="income_below_25k">25K से कम</string>
+    <string name="income_25k_50k">25K - 50K</string>
+    <string name="income_above_50k">50K से अधिक</string>
+    <string name="mutual_fund">म्यूचुअल फंड</string>
+    <string name="digital_gold">डिजिटल गोल्ड</string>
+    <string name="stock_market">स्टॉक मार्केट</string>
+    <string name="get_recommendation">सुझाव देखें</string>
+    <string name="recommended_result">सुझाव: %1$s</string>
+
 </resources>

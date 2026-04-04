@@ -39,6 +39,7 @@ import com.example.cashcactus.ui.screens.VaultPinScreen
 import com.example.cashcactus.ui.screens.ViewVaultScreen
 import com.example.cashcactus.ui.theme.CashCactusTheme
 import com.example.cashcactus.utils.createNotificationChannel
+import com.example.cashcactus.utils.LanguageManager
 import com.example.cashcactus.utils.UserSessionManager
 import com.example.cashcactus.utils.VaultSessionManager
 import com.example.cashcactus.viewmodel.MainViewModel
@@ -54,6 +55,7 @@ class MainActivity : ComponentActivity() {
         )
 
         createNotificationChannel(this)
+        LanguageManager.applySavedLanguage(this)
 
         setContent {
             var isDark by remember { mutableStateOf(false) }
