@@ -1,6 +1,6 @@
 package com.example.cashcactus.ui.screens
 
-import android.content.Context
+import android.app.Activity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,20 +20,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.cashcactus.R
 import com.example.cashcactus.ui.components.CashCactusCard
 import com.example.cashcactus.ui.components.CashCactusScreenScaffold
+import com.example.cashcactus.utils.LanguageManager
 import com.example.cashcactus.utils.UserSessionManager
 import com.google.firebase.auth.FirebaseAuth
-
-private const val SETTINGS_PREF = "app_settings"
-private const val KEY_SELECTED_LANGUAGE = "selected_language"
 
 @Composable
 fun SettingsScreen(
@@ -43,15 +42,11 @@ fun SettingsScreen(
 ) {
     val context = LocalContext.current
     var showDeleteDialog by remember { mutableStateOf(false) }
-
-    val languagePref = remember {
-        context.getSharedPreferences(SETTINGS_PREF, Context.MODE_PRIVATE)
-    }
-    var selectedLanguage by rememberSaveable {
-        mutableStateOf(languagePref.getString(KEY_SELECTED_LANGUAGE, "English") ?: "English")
+    var selectedLanguage by remember {
+        mutableStateOf(LanguageManager.getSavedLanguage(context))
     }
 
-    CashCactusScreenScaffold(title = "Settings") { contentPadding ->
+    CashCactusScreenScaffold(title = stringResource(R.string.settings)) { contentPadding ->
         LazyColumn(
             modifier = Modifier.padding(contentPadding),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -59,14 +54,14 @@ fun SettingsScreen(
             item {
                 CashCactusCard(modifier = Modifier.fillMaxWidth()) {
                     Column {
-                        Text("Theme", style = MaterialTheme.typography.titleLarge)
+                        Text(stringResource(R.string.theme), style = MaterialTheme.typography.titleLarge)
                         Spacer(modifier = Modifier.height(12.dp))
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(if (isDarkTheme) "Dark Mode" else "Light Mode")
+                            Text(if (isDarkTheme) stringResource(R.string.dark_mode) else stringResource(R.string.light_mode))
                             Switch(
                                 checked = isDarkTheme,
                                 onCheckedChange = { enabled -> onThemeChange(enabled) }
@@ -79,10 +74,13 @@ fun SettingsScreen(
             item {
                 CashCactusCard(modifier = Modifier.fillMaxWidth()) {
                     Column {
-                        Text("Language", style = MaterialTheme.typography.titleLarge)
+                        Text(stringResource(R.string.language), style = MaterialTheme.typography.titleLarge)
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        listOf("English", "Hindi").forEach { language ->
+                        listOf(
+                            LanguageManager.ENGLISH to stringResource(R.string.english),
+                            LanguageManager.HINDI to stringResource(R.string.hindi)
+                        ).forEach { (languageCode, languageLabel) ->
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -90,13 +88,16 @@ fun SettingsScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 RadioButton(
-                                    selected = selectedLanguage == language,
+                                    selected = selectedLanguage == languageCode,
                                     onClick = {
-                                        selectedLanguage = language
-                                        languagePref.edit().putString(KEY_SELECTED_LANGUAGE, language).apply()
+                                        if (selectedLanguage != languageCode) {
+                                            selectedLanguage = languageCode
+                                            LanguageManager.setLanguage(context, languageCode)
+                                            (context as? Activity)?.recreate()
+                                        }
                                     }
                                 )
-                                Text(language)
+                                Text(languageLabel)
                             }
                         }
                     }
@@ -106,13 +107,13 @@ fun SettingsScreen(
             item {
                 CashCactusCard(modifier = Modifier.fillMaxWidth()) {
                     Column {
-                        Text("Account", style = MaterialTheme.typography.titleLarge)
+                        Text(stringResource(R.string.account), style = MaterialTheme.typography.titleLarge)
                         Spacer(modifier = Modifier.height(12.dp))
                         Button(
                             onClick = { showDeleteDialog = true },
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Delete Account")
+                            Text(stringResource(R.string.delete_account))
                         }
                     }
                 }
@@ -123,8 +124,8 @@ fun SettingsScreen(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Delete Account") },
-            text = { Text("Are you sure you want to delete your account session on this device?") },
+            title = { Text(stringResource(R.string.delete_account)) },
+            text = { Text(stringResource(R.string.delete_account_confirmation)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -136,12 +137,12 @@ fun SettingsScreen(
                         }
                     }
                 ) {
-                    Text("Delete")
+                    Text(stringResource(R.string.delete))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )

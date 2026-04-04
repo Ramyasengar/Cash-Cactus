@@ -16,10 +16,10 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -59,13 +59,6 @@ fun LoginScreen(
                 .padding(contentPadding),
             verticalArrangement = Arrangement.Center
         ) {
-            Text(
-                text = stringResource(R.string.welcome_user),
-                style = MaterialTheme.typography.headlineMedium
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
             CashCactusCard(modifier = Modifier.fillMaxWidth()) {
                 Column {
                     OutlinedTextField(
@@ -80,7 +73,12 @@ fun LoginScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    if (emailError) Text("Enter valid email", style = MaterialTheme.typography.bodySmall)
+                    if (emailError) {
+                        Text(
+                            stringResource(R.string.invalid_email),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
@@ -95,18 +93,33 @@ fun LoginScreen(
                         leadingIcon = { Icon(Icons.Default.Lock, null) },
                         trailingIcon = {
                             IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                                Icon(if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff, null)
+                                Icon(
+                                    if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                    null
+                                )
                             }
                         },
-                        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        visualTransformation = if (passwordVisible) {
+                            VisualTransformation.None
+                        } else {
+                            PasswordVisualTransformation()
+                        },
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    if (passwordError) Text("Minimum 6 characters required", style = MaterialTheme.typography.bodySmall)
+                    if (passwordError) {
+                        Text(
+                            stringResource(R.string.password_error),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    TextButton(onClick = { navController.navigate("forgotPassword") }, modifier = Modifier.fillMaxWidth()) {
+                    TextButton(
+                        onClick = { navController.navigate("forgotPassword") },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         Text(stringResource(R.string.forgot_password))
                     }
 
@@ -123,22 +136,35 @@ fun LoginScreen(
                                             popUpTo("login") { inclusive = true }
                                         }
                                     } else {
-                                        Toast.makeText(context, "Login Failed", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(
+                                            context,
+                                            context.getString(R.string.login_failed_toast),
+                                            Toast.LENGTH_SHORT
+                                        ).show()
                                     }
                                 }
                             } else {
-                                Toast.makeText(context, "Enter all fields", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    context,
+                                    context.getString(R.string.fill_required),
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             }
                         },
                         modifier = Modifier.fillMaxWidth()
-                    ) { Text(stringResource(R.string.login)) }
+                    ) {
+                        Text(stringResource(R.string.login))
+                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            TextButton(onClick = { navController.navigate("register") }, modifier = Modifier.fillMaxWidth()) {
-                Text("Don't have an account? Register")
+            TextButton(
+                onClick = { navController.navigate("register") },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(stringResource(R.string.no_account_register))
             }
         }
     }
