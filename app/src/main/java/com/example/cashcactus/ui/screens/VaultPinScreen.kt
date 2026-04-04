@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.cashcactus.R
 import com.example.cashcactus.ui.components.BaseScreen
@@ -41,7 +42,7 @@ fun VaultPinScreen(navController: NavController, mode: String) {
     BaseScreen(title = if (isSetupMode) stringResource(R.string.create_pin) else stringResource(R.string.unlock_vault)) { contentPadding ->
         Column(modifier = Modifier.fillMaxSize().padding(contentPadding), verticalArrangement = Arrangement.Center) {
             CashCactusCard(modifier = Modifier.fillMaxWidth()) {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(12. dp)) {
                     Text(if (isSetupMode) stringResource(R.string.set_pin_desc) else stringResource(R.string.unlock_pin_desc), style = MaterialTheme.typography.bodyMedium)
                     OutlinedTextField(value = pin, onValueChange = { if (it.length <= 4 && it.all(Char::isDigit)) pin = it }, modifier = Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.pin_label)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword), visualTransformation = PasswordVisualTransformation())
                     if (isSetupMode) {
