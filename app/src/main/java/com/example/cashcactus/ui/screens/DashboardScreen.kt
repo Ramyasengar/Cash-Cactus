@@ -1,5 +1,6 @@
 package com.example.cashcactus.ui.screens
 
+import android.app.DatePickerDialog
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,16 +11,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
@@ -33,7 +29,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -45,7 +40,10 @@ import com.example.cashcactus.ui.components.CashCactusScreenScaffold
 import com.example.cashcactus.ui.components.PieChartView
 import com.example.cashcactus.viewmodel.MainViewModel
 import com.example.cashcactus.viewmodel.TransactionViewModel
-import kotlin.math.roundToInt
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,6 +79,10 @@ fun DashboardScreen(
     var savingInput by remember { mutableStateOf("") }
     var calculatedSaving by remember { mutableStateOf(0.0) }
 
+    val savedPeriod = remember { getAnalyticsPeriod(context) }
+    var selectedStartDate by remember { mutableStateOf(savedPeriod?.startDateMillis ?: startOfCurrentMonthMillis()) }
+    var selectedEndDate by remember { mutableStateOf(savedPeriod?.endDateMillis ?: endOfCurrentMonthMillis()) }
+
     val fillRequiredText = stringResource(R.string.fill_required)
     val enterSavingText = stringResource(R.string.enter_saving)
     val savedSuccessText = stringResource(R.string.saved_success)
@@ -94,21 +96,11 @@ fun DashboardScreen(
                 CashCactusCard(modifier = Modifier.fillMaxWidth()) {
                     Column {
                         Text(
-                            text = stringResource(R.string.setup_budget),
+                            text = stringResource(R.string.monthly_budget),
                             style = MaterialTheme.typography.headlineMedium
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text("Predicted Spending: ₹${viewModel.prediction.roundToInt()}")
-                        Text(viewModel.insight)
-                        Spacer(modifier = Modifier.height(6.dp))
-                        viewModel.alerts.forEach { Text(it) }
-                    }
-                }
-            }
 
-            item {
-                CashCactusCard(modifier = Modifier.fillMaxWidth()) {
-                    Column {
+                        Spacer(modifier = Modifier.height(10.dp))
                         ExposedDropdownMenuBox(
                             expanded = expanded,
                             onExpandedChange = { expanded = !expanded }
@@ -145,6 +137,28 @@ fun DashboardScreen(
                         OutlinedTextField(value = income, onValueChange = { income = it }, label = { Text(stringResource(R.string.monthly_income)) }, modifier = Modifier.fillMaxWidth())
                         Spacer(modifier = Modifier.height(10.dp))
                         OutlinedTextField(value = budget, onValueChange = { budget = it }, label = { Text(stringResource(R.string.monthly_budget)) }, modifier = Modifier.fillMaxWidth())
+
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text("Time Period", style = MaterialTheme.typography.titleMedium)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Button(
+                                onClick = {
+                                    showDatePicker(context, selectedStartDate) { selectedStartDate = it }
+                                },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text("Start: ${formatDate(selectedStartDate)}")
+                            }
+                            Button(
+                                onClick = {
+                                    showDatePicker(context, selectedEndDate) { selectedEndDate = it }
+                                },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text("End: ${formatDate(selectedEndDate)}")
+                            }
+                        }
 
                         Spacer(modifier = Modifier.height(15.dp))
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -192,6 +206,10 @@ fun DashboardScreen(
                         Spacer(modifier = Modifier.height(20.dp))
                         Button(
                             onClick = {
+                                if (selectedStartDate > selectedEndDate) {
+                                    Toast.makeText(context, "Start date must be before end date", Toast.LENGTH_SHORT).show()
+                                    return@Button
+                                }
                                 if (category.isBlank() || ageInput.isBlank() || income.isBlank() || budget.isBlank()) {
                                     Toast.makeText(context, fillRequiredText, Toast.LENGTH_SHORT).show()
                                     return@Button
@@ -202,6 +220,11 @@ fun DashboardScreen(
                                 }
                                 val ageInt = ageInput.toIntOrNull() ?: 0
                                 val incomeDoubleFinal = income.toDoubleOrNull() ?: 0.0
+                                val budgetLimit = budget.toDoubleOrNull() ?: 0.0
+
+                                saveAnalyticsPeriod(context, selectedStartDate, selectedEndDate)
+                                saveBudgetLimit(context, budgetLimit)
+
                                 viewModel.saveDashboardData(ageInt, incomeDoubleFinal)
                                 Toast.makeText(context, savedSuccessText, Toast.LENGTH_SHORT).show()
                                 navController.navigate("expenseCategory/$ageInt")
@@ -225,34 +248,48 @@ fun DashboardScreen(
                     }
                 }
             }
-
-            item {
-                CashCactusCard(modifier = Modifier.fillMaxWidth()) {
-                    Column {
-                        Text(text = stringResource(R.string.transactions), style = MaterialTheme.typography.titleMedium)
-                        Spacer(modifier = Modifier.height(10.dp))
-                        if (transactions.isEmpty()) {
-                            Text(stringResource(R.string.no_transactions))
-                        } else {
-                            transactions.forEach { transaction ->
-                                Card(
-                                    shape = RoundedCornerShape(12.dp),
-                                    colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.8f)),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 4.dp)
-                                ) {
-                                    Column(modifier = Modifier.padding(12.dp)) {
-                                        Text("₹${transaction.amount}")
-                                        Text(transaction.category)
-                                        Text(transaction.type)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
         }
     }
+}
+
+private fun showDatePicker(context: android.content.Context, initialMillis: Long, onDateSelected: (Long) -> Unit) {
+    val cal = Calendar.getInstance().apply { timeInMillis = initialMillis }
+    DatePickerDialog(
+        context,
+        { _, year, month, dayOfMonth ->
+            val selected = Calendar.getInstance().apply {
+                set(year, month, dayOfMonth, 0, 0, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
+            onDateSelected(selected.timeInMillis)
+        },
+        cal.get(Calendar.YEAR),
+        cal.get(Calendar.MONTH),
+        cal.get(Calendar.DAY_OF_MONTH)
+    ).show()
+}
+
+private fun formatDate(millis: Long): String {
+    val formatter = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+    return formatter.format(Date(millis))
+}
+
+private fun startOfCurrentMonthMillis(): Long {
+    return Calendar.getInstance().apply {
+        set(Calendar.DAY_OF_MONTH, 1)
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }.timeInMillis
+}
+
+private fun endOfCurrentMonthMillis(): Long {
+    return Calendar.getInstance().apply {
+        set(Calendar.DAY_OF_MONTH, getActualMaximum(Calendar.DAY_OF_MONTH))
+        set(Calendar.HOUR_OF_DAY, 23)
+        set(Calendar.MINUTE, 59)
+        set(Calendar.SECOND, 59)
+        set(Calendar.MILLISECOND, 999)
+    }.timeInMillis
 }

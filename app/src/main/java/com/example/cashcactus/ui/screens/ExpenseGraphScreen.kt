@@ -1,23 +1,22 @@
 package com.example.cashcactus.ui.screens
 
 import android.graphics.Paint
-import android.widget.Toast
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -29,9 +28,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.cashcactus.R
+import com.example.cashcactus.data.model.Transaction
 import com.example.cashcactus.ui.components.CashCactusCard
 import com.example.cashcactus.ui.components.CashCactusScreenScaffold
 import com.example.cashcactus.viewmodel.MainViewModel
+import com.example.cashcactus.viewmodel.TransactionViewModel
 
 @Composable
 fun ExpenseGraphScreen(
@@ -39,19 +40,28 @@ fun ExpenseGraphScreen(
     viewModel: MainViewModel = viewModel()
 ) {
     val context = LocalContext.current
-    val graphType = getGraphPreference(context)
+    val transactionViewModel: TransactionViewModel = viewModel()
+    val transactions by transactionViewModel.allTransactions.collectAsState(initial = emptyList())
 
-    val userData = listOf(
-        "Food" to viewModel.food.toFloat(),
-        "Rent" to viewModel.rent.toFloat(),
-        "Medical" to viewModel.medical.toFloat(),
-        "EMI" to viewModel.emi.toFloat(),
-        "Other" to viewModel.additional.toFloat(),
-        "Edu" to viewModel.education.toFloat()
-    )
+    val period = getAnalyticsPeriod(context)
+    val filteredTransactions = transactions.filterByPeriod(period?.startDateMillis, period?.endDateMillis)
 
-    val aiData = viewModel.getAIPredictedExpenses()
-    val maxValue = (userData + aiData).maxOfOrNull { it.second } ?: 1f
+    val expenseTransactions = filteredTransactions.filter { it.type.equals("expense", ignoreCase = true) }
+    val incomeTransactions = filteredTransactions.filter { it.type.equals("income", ignoreCase = true) }
+
+    val budgetLimit = getBudgetLimit(context)
+    val totalExpenses = expenseTransactions.sumOf { it.amount }
+    val totalIncome = incomeTransactions.sumOf { it.amount }
+    val remainingBudget = budgetLimit - totalExpenses
+    val savings = totalIncome - totalExpenses
+
+    val graphData = expenseTransactions
+        .groupBy { if (it.category.isBlank()) "Other" else it.category }
+        .mapValues { (_, list) -> list.sumOf { it.amount }.toFloat() }
+        .toList()
+        .sortedByDescending { it.second }
+
+    val maxValue = graphData.maxOfOrNull { it.second } ?: 1f
 
     CashCactusScreenScaffold(title = stringResource(R.string.expense_analysis)) { contentPadding ->
         Column(
@@ -61,93 +71,27 @@ fun ExpenseGraphScreen(
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             CashCactusCard(modifier = Modifier.fillMaxWidth()) {
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("AI Insights", style = MaterialTheme.typography.titleMedium)
-                    Text("Savings: ${viewModel.savingsPercent}%")
-                    Text("Trend: ${viewModel.trend}")
-                    Text("Prediction: ₹${viewModel.prediction.toInt()}")
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Budget Limit: ₹${budgetLimit.toInt()}", style = MaterialTheme.typography.titleMedium)
+                    Text("Remaining Budget: ₹${remainingBudget.toInt()}", style = MaterialTheme.typography.titleMedium)
+                    Text("Savings: ₹${savings.toInt()}", style = MaterialTheme.typography.titleMedium)
                 }
             }
 
-            when (graphType) {
-                "USER" -> {
-                    Text("Your Expenses", style = MaterialTheme.typography.titleMedium)
-                    GraphCard(
-                        data = userData,
-                        animatedValues = userData.map { animateFloatAsState(it.second).value },
-                        maxValue = maxValue,
-                        barColor = Color(0xFF7E57C2)
-                    )
-                }
-
-                "AI" -> {
-                    Text("AI Optimized", style = MaterialTheme.typography.titleMedium)
-                    GraphCard(
-                        data = aiData,
-                        animatedValues = aiData.map { animateFloatAsState(it.second).value },
-                        maxValue = maxValue,
-                        barColor = Color(0xFF26A69A)
-                    )
-                }
-
-                else -> {
-                    Text("Your Expenses", style = MaterialTheme.typography.titleMedium)
-                    GraphCard(
-                        data = userData,
-                        animatedValues = userData.map { animateFloatAsState(it.second).value },
-                        maxValue = maxValue,
-                        barColor = Color(0xFF7E57C2)
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text("AI Optimized", style = MaterialTheme.typography.titleMedium)
-                    GraphCard(
-                        data = aiData,
-                        animatedValues = aiData.map { animateFloatAsState(it.second).value },
-                        maxValue = maxValue,
-                        barColor = Color(0xFF26A69A)
-                    )
-
-                    Text("Which analysis do you prefer?")
-                    Button(
-                        onClick = {
-                            saveGraphPreference(context, "USER")
-                            Toast.makeText(context, "User Graph Selected", Toast.LENGTH_SHORT).show()
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Use My Graph")
-                    }
-                    Button(
-                        onClick = {
-                            saveGraphPreference(context, "AI")
-                            Toast.makeText(context, "AI Graph Selected", Toast.LENGTH_SHORT).show()
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Use AI Graph")
-                    }
-                }
-            }
-
-            Button(
-                onClick = {
-                    saveGraphPreference(context, "NONE")
-                    Toast.makeText(context, "Preference Reset", Toast.LENGTH_SHORT).show()
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Reset Preference")
-            }
-
-            Button(
-                onClick = { navController.navigate("home") },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Back to Home")
-            }
+            GraphCard(
+                data = graphData,
+                animatedValues = graphData.map { animateFloatAsState(it.second).value },
+                maxValue = maxValue,
+                barColor = Color(0xFF7E57C2)
+            )
         }
     }
+}
+
+private fun List<Transaction>.filterByPeriod(startDateMillis: Long?, endDateMillis: Long?): List<Transaction> {
+    if (startDateMillis == null || endDateMillis == null) return this
+    val inclusiveEnd = endDateMillis + 86_399_999L
+    return filter { it.date in startDateMillis..inclusiveEnd }
 }
 
 @Composable
@@ -161,6 +105,15 @@ fun GraphCard(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.15f))
     ) {
+        if (data.isEmpty()) {
+            Text(
+                text = "No transactions found for selected period",
+                modifier = Modifier.padding(16.dp),
+                style = MaterialTheme.typography.bodyMedium
+            )
+            return@Card
+        }
+
         Canvas(
             modifier = Modifier
                 .fillMaxWidth()
