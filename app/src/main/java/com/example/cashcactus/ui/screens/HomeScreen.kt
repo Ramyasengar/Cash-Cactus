@@ -112,22 +112,6 @@ fun HomeScreen(
                             Text("₹${viewModel.monthlySalary.toInt()}", style = MaterialTheme.typography.headlineLarge)
                         }
                     }
-                    Spacer(modifier = Modifier.height(20.dp))
-                    Card(colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.15f)), modifier = Modifier.fillMaxWidth()) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text("Savings"); Text("${viewModel.savingsPercent}%")
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text("Trend"); Text(viewModel.trend)
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(20.dp))
-                    Card(colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.15f)), modifier = Modifier.fillMaxWidth()) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text("Smart Tip")
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text("Save at least 20% of your income every month")
-                        }
-                    }
                 }
             }
         }
