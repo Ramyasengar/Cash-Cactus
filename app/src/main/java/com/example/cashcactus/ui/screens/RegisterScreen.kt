@@ -1,5 +1,6 @@
 package com.example.cashcactus.ui.screens
 
+import android.util.Patterns
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -27,6 +28,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -50,6 +52,13 @@ fun RegisterScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+    var submitAttempted by remember { mutableStateOf(false) }
+
+    val isEmailValid = isValidEmail(email)
+    val isPasswordValid = isValidPassword(password)
+    val showEmailError = submitAttempted || email.isNotEmpty()
+    val showPasswordError = submitAttempted || password.isNotEmpty()
+    val isFormValid = isEmailValid && isPasswordValid && name.isNotBlank()
 
     BaseScreen(title = stringResource(R.string.register)) { contentPadding ->
         Column(
@@ -82,8 +91,16 @@ fun RegisterScreen(
                         onValueChange = { email = it },
                         label = { Text(stringResource(R.string.email)) },
                         leadingIcon = { Icon(Icons.Default.Email, null) },
+                        isError = showEmailError && !isEmailValid,
                         modifier = Modifier.fillMaxWidth()
                     )
+                    if (showEmailError && !isEmailValid) {
+                        Text(
+                            text = "Invalid email format",
+                            color = Color.Red,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
@@ -98,14 +115,23 @@ fun RegisterScreen(
                             }
                         },
                         visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        isError = showPasswordError && !isPasswordValid,
                         modifier = Modifier.fillMaxWidth()
                     )
+                    if (showPasswordError && !isPasswordValid) {
+                        Text(
+                            text = "Password must be 8+ chars with 1 special character",
+                            color = Color.Red,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(20.dp))
 
                     Button(
                         onClick = {
-                            if (email.isNotEmpty() && password.isNotEmpty()) {
+                            submitAttempted = true
+                            if (isFormValid) {
                                 auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener { task ->
                                     if (task.isSuccessful) {
                                         Toast.makeText(context, "Registration Successful", Toast.LENGTH_SHORT).show()
@@ -117,9 +143,10 @@ fun RegisterScreen(
                                     }
                                 }
                             } else {
-                                Toast.makeText(context, "Enter all fields", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "Please fix highlighted fields", Toast.LENGTH_SHORT).show()
                             }
                         },
+                        enabled = isFormValid,
                         modifier = Modifier.fillMaxWidth()
                     ) { Text(stringResource(R.string.register)) }
                 }
@@ -132,4 +159,14 @@ fun RegisterScreen(
             }
         }
     }
+}
+
+fun isValidEmail(email: String): Boolean {
+    return email.isNotBlank() && Patterns.EMAIL_ADDRESS.matcher(email).matches()
+}
+
+fun isValidPassword(password: String): Boolean {
+    val hasMinLength = password.length >= 8
+    val hasSpecialChar = password.any { !it.isLetterOrDigit() }
+    return hasMinLength && hasSpecialChar
 }
