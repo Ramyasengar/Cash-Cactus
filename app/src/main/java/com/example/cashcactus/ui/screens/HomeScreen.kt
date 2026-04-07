@@ -105,8 +105,18 @@ fun HomeScreen(
                     contentScale = ContentScale.Crop
                 )
 
-                Column(modifier = Modifier.fillMaxSize().padding(contentPadding)) {
-                    Card(colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.15f)), modifier = Modifier.fillMaxWidth().animateContentSize()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(contentPadding)
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                ) {
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.15f)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .animateContentSize()
+                    ) {
                         Column(modifier = Modifier.padding(20.dp)) {
                             Text("Your Balance", style = MaterialTheme.typography.titleMedium)
                             Text("₹${viewModel.monthlySalary.toInt()}", style = MaterialTheme.typography.headlineLarge)
